@@ -95,6 +95,8 @@ class StraddleShiftInput:
         self.gc = gspread.authorize(self.creds)
         self.ws = self.gc.open_by_url(self.GS_SPREADSHEET_URL).worksheet(self.GS_WORKSHEET_NAME)
 
+        # Build the allowed time choices once (09:15:00 → 15:30:00, 1-minute steps)
+        self.allowed_times, self.allowed_labels = self._build_time_options(self.MIN_T, self.MAX_T)
 
        
     # ---------------- Page Setup ----------------
@@ -469,4 +471,5 @@ class StraddleShiftInput:
 # ---------------- Main ----------------
 if __name__ == "__main__":
     StraddleShiftInput().run()
+
 
