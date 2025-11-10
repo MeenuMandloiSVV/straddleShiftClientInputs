@@ -187,7 +187,7 @@ class StraddleShiftInput:
     def _get_collection(self, db_name: str):
         if not db_name:
             return None
-        db = self.client[db_name]  # DB name == client_id
+        db = self.mongo_client[db_name]  # DB name == client_id
         return db[self.COLLECTION_NAME]
 
     def _load_existing(self, db_name: str):
@@ -469,3 +469,4 @@ class StraddleShiftInput:
 # ---------------- Main ----------------
 if __name__ == "__main__":
     StraddleShiftInput().run()
+
