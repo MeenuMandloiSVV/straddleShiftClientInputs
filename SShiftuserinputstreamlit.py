@@ -343,7 +343,7 @@ class StraddleShiftInput:
 
         return {
             "Start": Start, "Pause": Pause, "Stop": Stop,
-            "CallEntry": CallEntry, "PutEntry": PutEntry, "ShiftHedge": ShiftHedge,
+            "CallEntry": CallEntry, "PutEntry": PutEntry, "ShiftHedge": ShiftHedge,"FirstEntry": FirstEntry,
             "OTMPoints_raw": OTMPoints_raw, "HedgePoints_raw": HedgePoints_raw, "ShiftPoints_raw": ShiftPoints_raw,
             "Symbol": Symbol, "ExpiryNo_raw": ExpiryNo_raw, "OrderLot_raw": OrderLot_raw
         }
@@ -474,6 +474,7 @@ class StraddleShiftInput:
 # ---------------- Main ----------------
 if __name__ == "__main__":
     StraddleShiftInput().run()
+
 
 
 
