@@ -220,7 +220,7 @@ class StraddleShiftInput:
                 "SavedAt_IST", "SavedAt_UTC",
                 "ClientID", "StrategyID",
                 "Start", "Pause", "Stop",
-                "CallEntry", "PutEntry", "ShiftHedge",
+                "CallEntry", "PutEntry", "ShiftHedge","FirstEntry",
                 "ShiftPoints", "HedgePoints", "OTMPoints",
                 "Symbol", "ExpiryNo", "OrderLot",
                 "StartTime", "EndTime",
@@ -242,6 +242,7 @@ class StraddleShiftInput:
             str(doc.get("CallEntry", False)),
             str(doc.get("PutEntry", False)),
             str(doc.get("ShiftHedge", False)),
+            str(doc.get("FirstEntry", False)),
             str(doc.get("ShiftPoints", "")),
             str(doc.get("HedgePoints", "")),
             str(doc.get("OTMPoints", "")),
@@ -310,6 +311,7 @@ class StraddleShiftInput:
             CallEntry = self._inline_checkbox("CallEntry", key=f"CallEntry_{k}", value=self._pre_bool(existing, "CallEntry"))
             PutEntry = self._inline_checkbox("PutEntry", key=f"PutEntry_{k}", value=self._pre_bool(existing, "PutEntry"))
             ShiftHedge = self._inline_checkbox("ShiftHedge", key=f"ShiftHedge_{k}", value=self._pre_bool(existing, "ShiftHedge"))
+            FirstEntry = self._inline_checkbox("FirstEntry", key=f"FirstEntry_{k}", value=self._pre_bool(existing, "FirstEntry"))
 
         with c3:
             OTMPoints_raw = self._inline_text(
@@ -420,6 +422,7 @@ class StraddleShiftInput:
             "ShiftHedge": bool(ui_values["ShiftHedge"]),
             "CallEntry": bool(ui_values["CallEntry"]),
             "PutEntry": bool(ui_values["PutEntry"]),
+            "FirstEntry": bool(ui_values.get("FirstEntry", False)),
             "ShiftPoints": ShiftPoints,
             "HedgePoints": HedgePoints,
             "OTMPoints": OTMPoints,
@@ -471,5 +474,6 @@ class StraddleShiftInput:
 # ---------------- Main ----------------
 if __name__ == "__main__":
     StraddleShiftInput().run()
+
 
 
