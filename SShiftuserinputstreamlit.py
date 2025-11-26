@@ -266,6 +266,15 @@ class StraddleShiftInput:
         with icol:
             return st.checkbox(label="", key=key, value=value, label_visibility="collapsed")
 
+    def _inline_select(self, label: str, key: str, options, index: int = 0, help: str | None = None):
+        """Inline selectbox (label in left column)."""
+        lcol, icol = st.columns([1, 1.3], vertical_alignment="center")
+        with lcol:
+            self._inline_label(label)
+        with icol:
+            return st.selectbox(label="", options=options, index=index, key=key, help=help, label_visibility="collapsed")
+
+
     def _inline_text(self, label: str, key: str, value: str = "", placeholder: str = "") -> str:
         lcol, icol = st.columns([1, 1.3], vertical_alignment="center")
         with lcol:
@@ -503,3 +512,5 @@ class StraddleShiftInput:
 if __name__ == "__main__":
     StraddleShiftInput().run()
 
+if __name__ == "__main__":
+    StraddleShiftInput().run()
