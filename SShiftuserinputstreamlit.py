@@ -465,8 +465,29 @@ class StraddleShiftInput:
 
         # Put controls + timing + save inside one form so intermediate widget changes don't immediately trigger 'save' logic
         with st.form(key=f"strategy_form_{key_suffix}"):
-            ui_values = self._controls_section(existing, key_suffix)
-            StartTime, EndTime = self._timing_section(existing, key_suffix)
+            try:
+                ui_values = self._controls_section(existing, key_suffix)
+                StartTime, EndTime = self._timing_section(existing, key_suffix)
+            except Exception as e:
+                # If building the UI fails for any reason, show the error but still create a submit button
+                st.error(f"Error building form widgets: {e}")
+                # fallback defaults so save logic can still run
+                ui_values = {
+                    "Start": self._pre_bool(existing, "Start"),
+                    "Pause": self._pre_bool(existing, "Pause"),
+                    "Stop": self._pre_bool(existing, "Stop"),
+                    "CallEntry": self._pre_bool(existing, "CallEntry"),
+                    "PutEntry": self._pre_bool(existing, "PutEntry"),
+                    "ShiftHedge": self._pre_bool(existing, "ShiftHedge"),
+                    "FirstEntry": self._pre_bool(existing, "FirstEntry"),
+                    "OTMPoints": self._pre_int(existing, "OTMPoints", 0),
+                    "HedgePoints": self._pre_int(existing, "HedgePoints", 0),
+                    "ShiftPoints": self._pre_int(existing, "ShiftPoints", 0),
+                    "Symbol": self._pre_str(existing, "Symbol", ""),
+                    "ExpiryNo": self._pre_int(existing, "ExpiryNo", 0),
+                    "OrderLot": max(1, self._pre_int(existing, "OrderLot", 1)),
+                }
+                StartTime, EndTime = self.DEFAULT_START, self.DEFAULT_END
 
             submit = st.form_submit_button("Save Inputs")
             if submit:
@@ -481,3 +502,6 @@ class StraddleShiftInput:
 # ---------------- Main ----------------
 if __name__ == "__main__":
     StraddleShiftInput().run()
+
+# if __name__ == "__main__":
+#     StraddleShiftInput().run()
