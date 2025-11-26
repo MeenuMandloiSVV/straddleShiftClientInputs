@@ -11,7 +11,7 @@ from zoneinfo import ZoneInfo
 import json
 
 # ❗ MUST be the first Streamlit command in the file:
-st.set_page_config(page_title="Straddle Shift Strategy Controls", page_icon="🟢", layout="centered")
+st.set_page_config(page_title="Straddle Shift Strategy Controls CST0005", page_icon="🟢", layout="centered")
 
 
 class StraddleShiftInput:
