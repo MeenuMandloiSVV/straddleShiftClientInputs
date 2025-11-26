@@ -101,7 +101,7 @@ class StraddleShiftInput:
        
     # ---------------- Page Setup ----------------
     def _config_page(self):
-        st.title("Selected Strategies Inputs • CST0005")
+        st.title("Selected Strategies Inputs")
         st.markdown(
             """
                 <style>
@@ -514,3 +514,4 @@ if __name__ == "__main__":
 
 if __name__ == "__main__":
     StraddleShiftInput().run()
+
