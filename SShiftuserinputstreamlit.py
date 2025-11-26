@@ -172,7 +172,8 @@ class StraddleShiftInput:
         if not existing:
             return default
         try:
-            return int(existing.get(key, default))
+            v = existing.get(key, default)
+            return int(v) if v is not None else default
         except Exception:
             return default
 
@@ -274,14 +275,16 @@ class StraddleShiftInput:
                 label="", key=key, value=value, placeholder=placeholder, label_visibility="collapsed"
             )
 
-    def _inline_select(self, label: str, key: str, options, index: int = 0, help: str | None = None):
+    def _inline_number(self, label: str, key: str, value: int = 0, min_value: int | None = None) -> int:
+        # integer number input with label inline
         lcol, icol = st.columns([1, 1.3], vertical_alignment="center")
         with lcol:
             self._inline_label(label)
         with icol:
-            return st.selectbox(
-                label="", options=options, index=index, key=key, help=help, label_visibility="collapsed"
-            )
+            if min_value is not None:
+                return int(st.number_input(label="", key=key, value=int(value), min_value=int(min_value), step=1, format="%d", label_visibility="collapsed"))
+            else:
+                return int(st.number_input(label="", key=key, value=int(value), step=1, format="%d", label_visibility="collapsed"))
 
     # ---------------- Validation ----------------
     def _digits_only(self, s: str) -> bool:
@@ -314,17 +317,17 @@ class StraddleShiftInput:
             FirstEntry = self._inline_checkbox("FirstEntry", key=f"FirstEntry_{k}", value=self._pre_bool(existing, "FirstEntry"))
 
         with c3:
-            OTMPoints_raw = self._inline_text(
+            OTMPoints = self._inline_number(
                 "OTMPoints", key=f"OTMPoints_{k}",
-                value=str(self._pre_int(existing, "OTMPoints", 0)), placeholder="e.g. 20"
+                value=self._pre_int(existing, "OTMPoints", 0), min_value=0
             )
-            HedgePoints_raw = self._inline_text(
+            HedgePoints = self._inline_number(
                 "HedgePoints", key=f"HedgePoints_{k}",
-                value=str(self._pre_int(existing, "HedgePoints", 0)), placeholder="e.g. 50"
+                value=self._pre_int(existing, "HedgePoints", 0), min_value=0
             )
-            ShiftPoints_raw = self._inline_text(
+            ShiftPoints = self._inline_number(
                 "ShiftPoints", key=f"ShiftPoints_{k}",
-                value=str(self._pre_int(existing, "ShiftPoints", 0)), placeholder="e.g. 25"
+                value=self._pre_int(existing, "ShiftPoints", 0), min_value=0
             )
 
         with c4:
@@ -332,20 +335,20 @@ class StraddleShiftInput:
                 "Symbol", key=f"Symbol_{k}",
                 value=self._pre_str(existing, "Symbol", ""), placeholder="e.g. NIFTY"
             )
-            ExpiryNo_raw = self._inline_text(
+            ExpiryNo = self._inline_number(
                 "ExpiryNo", key=f"ExpiryNo_{k}",
-                value=str(self._pre_int(existing, "ExpiryNo", 0)), placeholder="e.g. 0"
+                value=self._pre_int(existing, "ExpiryNo", 0), min_value=0
             )
-            OrderLot_raw = self._inline_text(
+            OrderLot = self._inline_number(
                 "OrderLot", key=f"OrderLot_{k}",
-                value=str(self._pre_int(existing, "OrderLot", 1)), placeholder="e.g. 1"
+                value=self._pre_int(existing, "OrderLot", 1), min_value=1
             )
 
         return {
             "Start": Start, "Pause": Pause, "Stop": Stop,
             "CallEntry": CallEntry, "PutEntry": PutEntry, "ShiftHedge": ShiftHedge,"FirstEntry": FirstEntry,
-            "OTMPoints_raw": OTMPoints_raw, "HedgePoints_raw": HedgePoints_raw, "ShiftPoints_raw": ShiftPoints_raw,
-            "Symbol": Symbol, "ExpiryNo_raw": ExpiryNo_raw, "OrderLot_raw": OrderLot_raw
+            "OTMPoints": OTMPoints, "HedgePoints": HedgePoints, "ShiftPoints": ShiftPoints,
+            "Symbol": Symbol, "ExpiryNo": ExpiryNo, "OrderLot": OrderLot
         }
 
     def _timing_section(self, existing: dict | None, k: str):
@@ -376,30 +379,29 @@ class StraddleShiftInput:
         return StartTime, EndTime
 
     def _save_section(self, client_id: str, ui_values: dict, StartTime: time, EndTime: time):
-        save = st.button(
-            "Save Inputs",
-            type="primary",
-            use_container_width=True,
-            key=f"save_{(client_id or 'no_client').replace(' ', '_')}"
-        )
-        if not save:
+        # Save button is handled by the form submit (see run)
+        if not st.session_state.get("_form_submitted", False):
             return
+
+        # Reset flag
+        st.session_state["_form_submitted"] = False
 
         if not client_id:
             st.error("client_id (DB name) enter kijiye.")
             return
 
         errors = []
-        if not self._digits_only(ui_values["ShiftPoints_raw"]):
-            errors.append("ShiftPoints must be a positive integer (digits only).")
-        if not self._digits_only(ui_values["HedgePoints_raw"]):
-            errors.append("HedgePoints must be a positive integer (digits only).")
-        if not self._digits_only(ui_values["OTMPoints_raw"]):
-            errors.append("OTMPoints must be a positive integer (digits only).")
-        if not self._digits_only(ui_values["ExpiryNo_raw"]):
-            errors.append("ExpiryNo must be a positive integer (digits only).")
-        if not self._digits_only(ui_values["OrderLot_raw"]):
-            errors.append("OrderLot must be a positive integer (digits only).")
+        # All numeric fields are coming as ints because we used number_input
+        if not isinstance(ui_values["ShiftPoints"], int) or ui_values["ShiftPoints"] < 0:
+            errors.append("ShiftPoints must be a non-negative integer.")
+        if not isinstance(ui_values["HedgePoints"], int) or ui_values["HedgePoints"] < 0:
+            errors.append("HedgePoints must be a non-negative integer.")
+        if not isinstance(ui_values["OTMPoints"], int) or ui_values["OTMPoints"] < 0:
+            errors.append("OTMPoints must be a non-negative integer.")
+        if not isinstance(ui_values["ExpiryNo"], int) or ui_values["ExpiryNo"] < 0:
+            errors.append("ExpiryNo must be a non-negative integer.")
+        if not isinstance(ui_values["OrderLot"], int) or ui_values["OrderLot"] < 1:
+            errors.append("OrderLot must be an integer ≥ 1.")
         if StartTime > EndTime:
             errors.append("StartTime must be ≤ EndTime")
 
@@ -408,12 +410,7 @@ class StraddleShiftInput:
                 st.error(e)
             return
 
-        ShiftPoints = int(ui_values["ShiftPoints_raw"])
-        HedgePoints = int(ui_values["HedgePoints_raw"])
-        OTMPoints = int(ui_values["OTMPoints_raw"])
-        ExpiryNo = int(ui_values["ExpiryNo_raw"])
-        OrderLot = int(ui_values["OrderLot_raw"])
-
+        # All good — build doc
         doc = {
             "StrategyID": self.STRATEGY_ID,
             "Start": bool(ui_values["Start"]),
@@ -423,12 +420,12 @@ class StraddleShiftInput:
             "CallEntry": bool(ui_values["CallEntry"]),
             "PutEntry": bool(ui_values["PutEntry"]),
             "FirstEntry": bool(ui_values.get("FirstEntry", False)),
-            "ShiftPoints": ShiftPoints,
-            "HedgePoints": HedgePoints,
-            "OTMPoints": OTMPoints,
+            "ShiftPoints": int(ui_values["ShiftPoints"]),
+            "HedgePoints": int(ui_values["HedgePoints"]),
+            "OTMPoints": int(ui_values["OTMPoints"]),
             "Symbol": ui_values["Symbol"],
-            "ExpiryNo": ExpiryNo,
-            "OrderLot": OrderLot,
+            "ExpiryNo": int(ui_values["ExpiryNo"]),
+            "OrderLot": int(ui_values["OrderLot"]),
             "StartTime": self._fmt_hms(StartTime),
             "EndTime": self._fmt_hms(EndTime),
             "updated_at": datetime.utcnow(),
@@ -465,16 +462,21 @@ class StraddleShiftInput:
         self._config_page()
         client_id, existing = self._client_input()
         key_suffix = (client_id or "no_client").replace(" ", "_")
-        ui_values = self._controls_section(existing, key_suffix)
-        StartTime, EndTime = self._timing_section(existing, key_suffix)
-        self._save_section(client_id, ui_values, StartTime, EndTime)
+
+        # Put controls + timing + save inside one form so intermediate widget changes don't immediately trigger 'save' logic
+        with st.form(key=f"strategy_form_{key_suffix}"):
+            ui_values = self._controls_section(existing, key_suffix)
+            StartTime, EndTime = self._timing_section(existing, key_suffix)
+
+            submit = st.form_submit_button("Save Inputs")
+            if submit:
+                # set a session flag so we can run save logic after the form (to avoid double render issues)
+                st.session_state["_form_submitted"] = True
+
+        # Run save logic (outside the form) which checks the submitted flag
+        self._save_section(client_id, ui_values if 'ui_values' in locals() else {}, StartTime if 'StartTime' in locals() else self.DEFAULT_START, EndTime if 'EndTime' in locals() else self.DEFAULT_END)
         self._current_doc_section(client_id)
 
 
-# ---------------- Main ----------------
-if __name__ == "__main__":
+# ---------------- Main ----------------nif __name__ == "__main__":
     StraddleShiftInput().run()
-
-
-
-
